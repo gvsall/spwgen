@@ -1,6 +1,4 @@
-#include "random_item.h"
-
-const char *skey_list::list[2048] =
+static const char *skeylist[2048] =
 {        "a",     "abe",   "ace",   "act",   "ad",    "ada",   "add",
 "ago",   "aid",   "aim",   "air",   "all",   "alp",   "am",    "amy",
 "an",    "ana",   "and",   "ann",   "ant",   "any",   "ape",   "aps",
@@ -258,3 +256,8 @@ const char *skey_list::list[2048] =
 "worm",  "worn",  "wove",  "writ",  "wynn",  "yale",  "yang",  "yank",
 "yard",  "yarn",  "yawl",  "yawn",  "yeah",  "year",  "yell",  "yoga",
 "yoke"   };
+
+const char *getSkeyWd(unsigned int n)
+{
+	return skeylist[n & 0x7ff];
+}

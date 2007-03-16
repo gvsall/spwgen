@@ -4,14 +4,42 @@
 ##############################################################################
 
 ##
-# Paths to includes and libraries.
-# BOTAN_INC: botan include directory (botan/botan.h must exist)
-# BOTAN_LIB: directory that contains the libbotan.so (or .a)
-# BOOST_INC: boost include directory (boost/program_options.hpp must exist)  
+# paths to crypto library headers and archives. if they are not in the
+# standard system locations (this really depends on the OS you are using),
+# then UNCOMMENT the CRYPTO_INCLUDE_PATH and CRYPTO_LIBRARY_PATH and add the
+# appropriate paths immediately after -I, resp. -L.
+#
+# OpenSSL
+# -------
+# The include path is the directory containing the openssl include
+# directory (e.g. if OpenSSL is installed in /usr/local/ssl, its include
+# files are in /usr/local/ssl/include/openssl and you must set the
+# CRYPTO_INCLUDE_PATH to -I/usr/local/ssl/include).
+#
+# The library path for OpenSSL is the one containing libcrypto.so or
+# libcrypto.a (e.g. set CRYPTO_LIBRARY_PATH to -L/usr/local/ssl/lib)
+#
+# cryptlib
+# --------
+# The include directory is the one containing the cryptlib.h file.
+# The library path is the one containing libcl.so or libcl.a.
 ##
-BOTAN_INC = .
-BOTAN_LIB = .
-BOOST_INC = .
+#CRYPTO_INCLUDE_PATH = -I/replace/this/with/real/path
+#CRYPTO_LIBRARY_PATH = -L/replace/this/with/real/path
+
+##
+# If using OpenSSL, uncomment the following 3 lines.
+##
+CRYPTO_CFLAGS =
+CRYPTO_OBJS   = secure_random_openssl.o
+CRYPTO_LIBS   = -lcrypto
+
+##
+# If using cryptlib, uncomment the following 3 lines.
+##
+#CRYPTO_CFLAGS = -D_REENTRANT
+#CRYPTO_OBJS   = secure_random_cryptlib.o
+#CRYPTO_LIBS   = -lcl -lpthread
 
 ##
 # Change PREFIX to install to different directories. The binary is installed
@@ -20,20 +48,30 @@ BOOST_INC = .
 PREFIX = /usr/local
 
 ##
+# On some operating systems (most notably Linux 2.6 kernels) using mlockall
+# causes the program to fail with segmentation fault because it tries to
+# allocate memory beyond its current resource limits for locked memory. If
+# you experience crashes immediately at startup, uncomment the following line.
+##
+#
+#NO_MLOCKALL = -DDISABLE_MLOCKALL
+
+##
 # Sometimes you have only dynamic libraries available. In that case COMMENT
 # the following line.
 ##
-#LINK_STATIC = -static
+LINK_STATIC = -static
 
 ##############################################################################
 # NO USER MODIFIABLE PARTS AFTER THIS POINT
 ##############################################################################
-CXXFLAGS = -g -Wall -W -I$(BOTAN_INC) -I$(BOOST_INC)
-LDFLAGS  = -L$(BOTAN_LIB) $(LINK_STATIC) -lbotan -lm
+CFLAGS	= -Wall $(CRYPTO_INCLUDE_PATH) $(CRYPTO_CFLAGS) $(NO_MLOCKALL)
+LDFLAGS	= $(CRYPTO_LIBRARY_PATH) $(LINK_STATIC) $(CRYPTO_LIBS) -lm
 
 .PHONY : all install-strip install clean 
 
-OBJS = main.o random_item.o filters.o diceware8k.o skeylist.o
+OBJS = diceware8k.o main.o pwgen.o secure_memory_unix.o \
+	$(CRYPTO_OBJS) skeylist.o
 
 all: secpwgen
 
@@ -51,8 +89,12 @@ install: secpwgen
 clean:
 	rm -f *.o secpwgen
 
-main.o: main.cc filters.h
-random_item.o: random_item.cc random_item.h
-filters.o: filters.cc filters.h
-diceware8k.o: diceware8k.cc random_item.h
-skeylist.o: skeylist.cc random_item.h
+diceware8k.o: diceware8k.c
+main.o: main.c secure_memory.h secure_random.h pwgen.h exceptions.h \
+  cexcept.h
+pwgen.o: pwgen.c secure_random.h pwgen.h exceptions.h cexcept.h
+secure_memory_unix.o: secure_memory_unix.c secure_random.h \
+  secure_memory.h exceptions.h cexcept.h
+secure_random_cryptlib.o: secure_random_cryptlib.c exceptions.h cexcept.h
+secure_random_openssl.o: secure_random_openssl.c exceptions.h cexcept.h
+skeylist.o: skeylist.c

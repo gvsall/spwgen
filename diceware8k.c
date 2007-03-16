@@ -1,10 +1,8 @@
-#include "random_item.h"
-
 /*  Diceware 8k Word List in C 
 	Arnold G. Reinhold
 	2000-10-23 */
 
-const char *diceware_list::list[8192] =
+static const char * Dicewds8k[] =
 {"a",
 "a&p",
 "a's",
@@ -8197,3 +8195,7 @@ const char *diceware_list::list[8192] =
 "?",
 "??",
 "@" };
+
+const char *getDiceWd(unsigned int n) {
+	return Dicewds8k[n & 0X1fff];
+}
