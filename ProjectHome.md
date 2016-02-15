@@ -1,0 +1,1 @@
+Secure Password Generator implements several methods for generation of secure random passwords and passphrases. Among the offered methods are Diceware methods with the original Diceware wordlist and S/Key wordlist. The program outputs the calculated entropy along with the password.
